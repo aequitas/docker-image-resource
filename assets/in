@@ -23,8 +23,13 @@ payload=$(mktemp /tmp/resource-in.XXXXXX)
 cat > $payload <&0
 
 insecure_registries=$(jq -r '.source.insecure_registries // [] | join(" ")' < $payload)
+docker_host=$(jq -r '.source.docker_host // ""')
 
-start_docker "$insecure_registries"
+if test -z "$docker_host";then
+    start_docker "$insecure_registries"
+else
+    export DOCKER_HOST=$docker_host
+fi
 
 username=$(jq -r '.source.username // ""' < $payload)
 password=$(jq -r '.source.password // ""' < $payload)

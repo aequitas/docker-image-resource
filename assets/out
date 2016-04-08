@@ -25,8 +25,13 @@ cat > $payload <&0
 cd $source
 
 insecure_registries=$(jq -r '.source.insecure_registries // [] | join(" ")' < $payload)
+docker_host=$(jq -r '.source.docker_host // ""')
 
-start_docker "$insecure_registries"
+if test -z "$docker_host";then
+    start_docker "$insecure_registries"
+else
+    export DOCKER_HOST=$docker_host
+fi
 
 username=$(jq -r '.source.username // ""' < $payload)
 password=$(jq -r '.source.password // ""' < $payload)
@@ -99,7 +104,7 @@ if [ -n "$build" ]; then
   else
     docker build -t "${repository}:${tag_name}" "$build"
   fi
-  
+
 elif [ -n "$load_file" ]; then
   docker load -i "$load_file"
   docker tag "${load_repository}:${load_tag}" "${repository}:${tag_name}"
